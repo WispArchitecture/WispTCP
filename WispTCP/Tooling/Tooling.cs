@@ -1,13 +1,12 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Threading;
 using static System.Text.Encoding;
-using static Settings;
 
+// Interface Over 
 interface Scripting {
     // Config
     static String rootPath = Assets.FullName;
@@ -32,6 +31,7 @@ interface Scripting {
     }
 }
 
+// Interface Over File Contents
 interface Sections {
     // Config
     static String rootPath = Assets.FullName;
@@ -73,11 +73,25 @@ interface Sections {
     }
 };
 
+static class FileSysExtensions {
+    internal static String Get(this DirectoryInfo self, String file) =>
+        File.ReadAllText(Path.Combine(self.FullName, file));
+}
+
 static class WebSocketExtensions {
     static readonly CancellationToken NC = CancellationToken.None;
 
     internal static void Send(this WebSocket self, String msg) {
         _ = self.SendAsync(UTF8.GetBytes(msg), 0, true, NC);
+    }
+
+    internal static void WaitOnText(this WebSocket self, out String msg) {
+        ArraySegment<Byte> buf = WebSocket.CreateServerBuffer(1024);
+        msg = UTF8.GetString(buf[..(self.ReceiveAsync(buf, NC).Result).Count]);
+    }
+
+    internal static void Trip(this WebSocket self, out String result, String script) {
+        self.Send(script); self.WaitOnText(out result);
     }
 
     internal static String TripCmd(this WebSocket self, String cmd) {

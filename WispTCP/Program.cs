@@ -1,5 +1,8 @@
 ﻿#pragma warning disable CS0164 // This label has not been referenced
 
+global using static Settings;
+global using static Tracer;
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -7,10 +10,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
-using static Program.IO;
-using static Settings;
-using static System.Text.Encoding;
 
+using static HttpHelpers;
+using static BootScripts;
+using BusConfig = MessageBus.Config;
+
+using static System.Text.Encoding;
+// 
 interface Context {
     internal static String CKey = "";
     internal static String Script => $$"""
@@ -21,81 +27,79 @@ interface Context {
 }
 
 static class Program {
-    static Boolean post_ = MessageBus.POST;
+    static Boolean post = Tracer.POST && MessageBus.POST;
     // Node
     static readonly TcpListener Listener;
+    static readonly WebSocket CommandPort;
+    static readonly WebSocket MessagePort;
 
-    static readonly WebSocket cmdsocket;
-    static readonly WebSocket msgsocket;
-
-    // Transients
-    static readonly NetworkStream stream;
-    static readonly String request;
+    // Temporals
+    static readonly NetworkStream stream_;
+    static readonly String request_;
 
     // User Port
     internal interface IO {
-        internal String RunCmd(String cmd) => cmdsocket.TripCmd(cmd);
-        internal Task<String> RunCmdAsync(String cmd) => Program.RunCmdAsync(cmd);
+        internal String RunCmd(String cmd) => CommandPort.TripCmd(cmd);
+        internal Task<String> RunCmdAsync(String cmd, String? log = null) => Program.RunCmdAsync(cmd, log);
 
-        internal static Boolean RunAppFile(out String result, String file) {
-            result = cmdsocket.TripCmd(App.Get(file));
+        internal static Boolean RunAppFile(out String result, String file, String? log = null) {
+            result = CommandPort.TripCmd(App.Get(file));
+            if (log != null) L(log);
             return !result.StartsWith(FailDefault);
         }
 
-        internal static Boolean RunAssetFile(out String result, String file) {
-            result = cmdsocket.TripCmd(Assets.Get(file));
+        internal static Boolean RunAssetFile(out String result, String file, String? log = null) {
+            result = CommandPort.TripCmd(Assets.Get(file));
+            if (log != null) L(log);
             return !result.StartsWith(FailDefault);
         }
     }
 
+    // Build the static machine (Mecha)
     static Program() {
-        if (!post_) throw new Exception("POST Failed");
+        if (!post) throw new Exception("POST Failed");
         Environment:
         Listener = new(IP, Port);
         Listener.Start();
         Process.Start(Browser, Url);
 
         WebBoot:
-        GetRequest(out request, out stream);
-        stream.Write(UTF8.GetBytes(HttpHeader + KernelScript));
-        stream.Close();
+        GetRequest(out request_, out stream_);
+        stream_.Write(UTF8.GetBytes(HttpHeader + POSTScript));
+        stream_.Close();
 
         WebBiosConnect:
-        GetRequest(out request, out stream);
-        stream.Write(AcceptSocket(request, CommandProtocol));
-        cmdsocket = WebSocket.CreateFromStream(stream, true, CommandProtocol, TimeSpan.FromMinutes(2));
+        GetRequest(out request_, out stream_);
+        stream_.Write(AcceptSocket(request_, CommandProtocol));
+        CommandPort = WebSocket.CreateFromStream(stream_, true, CommandProtocol, TimeSpan.FromMinutes(2));
 
         SharedContext:
         Send(Context.Script, "Context");
 
         WebBusConnect:
-        Send(BusScript, "Message Socket");
-        WebSocket? temp = null; // Favicon order unpredictable
-        GetRequest(out request, out stream);
+        Send(BusConfig.BusSocket, "Message Socket");
+        // Favicon order is unpredictable, so this crap...
+        WebSocket? temp = null;
+        GetRequest(out request_, out stream_);
         if (MsgIco(out WebSocket? a_)) temp = a_;
-        GetRequest(out request, out stream);
+        GetRequest(out request_, out stream_);
         if (MsgIco(out WebSocket? b_)) temp = b_;
-        msgsocket = temp ?? throw new("No Message Socket");
-        MessageBus.Bind(msgsocket);
+        MessagePort = temp ?? throw new("No Message Socket");
 
-        MountCES:
-        Send(BootScript, "BootScript");
+        WebBusInit:
+        MessageBus.Bind(MessagePort);
 
-        LoadStylex:
+        CES:
+        Send(KernelScript, "BootScript");
+        Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling");
+        Send(Tooling.Get("ElmTooling.js"), "Elms Tooling");
+
+        Assets:
         Send(Assets.Get("Stylex.js"), "Stylex");
-
-        LoadCommonElements:
         Send(Assets.Get("Elements.js"), "Elements");
 
         BusListen:
-        Task.Run(static () => {
-            while (true) {
-                GetRequest(out _, out NetworkStream stream);
-                Byte[] headerBytes = UTF8.GetBytes(NotSupportedHeader);
-                stream.Write(headerBytes);
-                stream.Close();
-            }
-        });
+
 
         RequestListen:
         Task.Run(static () => {
@@ -109,25 +113,26 @@ static class Program {
 
         /* **********   Locals   ********** */
 
-        static void Send(String cmd, String log) {
-            var a_ = cmdsocket.TripCmd(cmd);
-            var b_ = a_ == SuccessDefault ? log : a_;
-            Debug.WriteLine(b_);
+        static void Send(String cmd, String? log = null) {
+            var a_ = CommandPort.TripCmd(cmd);
+            if(a_.StartsWith(FailDefault)) throw new Exception(a_);
+            String b_ = a_ == SuccessDefault && log != null ? log : a_;
+            if (log != null) L(b_);
         }
 
         static Boolean MsgIco(out WebSocket? socket) {
-            if (request[5..].StartsWith("favicon.ico")) {
+            if (request_[5..].StartsWith("favicon.ico")) {
                 Byte[] icoContent = File.ReadAllBytes(Path.Combine(Assets.FullName, "favicon.ico"));
                 String responseHeader = IcoHeader(icoContent);
                 Byte[] headerBytes = UTF8.GetBytes(responseHeader);
-                stream.Write(headerBytes);
-                stream.Write(icoContent);
-                stream.Close();
+                stream_.Write(headerBytes);
+                stream_.Write(icoContent);
+                stream_.Close();
                 socket = null;
                 return false;
             }
-            stream.Write(AcceptSocket(request, MessageProtocol));
-            socket = WebSocket.CreateFromStream(stream, true, MessageProtocol, TimeSpan.FromMinutes(2));
+            stream_.Write(AcceptSocket(request_, MessageProtocol));
+            socket = WebSocket.CreateFromStream(stream_, true, MessageProtocol, TimeSpan.FromMinutes(2));
             return true;
         }
 
@@ -147,24 +152,22 @@ static class Program {
                     $"Sec-WebSocket-Protocol: {protocol}\r\n\r\n";
             return UTF8.GetBytes(a_);
         }
-
     }
 
     static async Task Main() {
-        MessageBus.Config();
-        MessageBus.Enable();
-        String rslt;
-        Debug.WriteLine(RunAppFile(out rslt, "Shell.js") ? "Shell" : rslt);
-        Debug.WriteLine(RunAppFile(out rslt, "Home.js") ? "Home" : rslt);
+        BusConfig.ConfigClient(ContextProcess.BusPort);
+        BusConfig.Enable();
+        await RunCmdAsync(ContextProcess.Gui, "Gui");
+        await RunCmdAsync(ContextProcess.Main, "Gui Main");
         await Task.Delay(-1);
     }
 
     /* **********   Work   ********** */
-    static async Task<String> RunCmdAsync(String cmd) {
+    static async Task<String> RunCmdAsync(String cmd, String? log = null) {
         TaskCompletionSource<String> tcs = new();
         await Task.Run(() => {
             try {
-                String result = cmdsocket.TripCmd(cmd);
+                String result = CommandPort.TripCmd(cmd);
                 if (result.StartsWith("fail", StringComparison.OrdinalIgnoreCase)) {
                     tcs.SetException(new InvalidOperationException($"Task failed: {result}"));
                 } else { tcs.SetResult(result); }
@@ -176,12 +179,13 @@ static class Program {
 }
 
 
-partial interface Settings {
+interface Settings {
     const String CommandProtocol = "transit.command";
     const String MessageProtocol = "transit.message";
     const String SuccessDefault = "success";
     const String FailDefault = "fail";
     const String AssetRoot = "Assets";
+    const String ToolRoot = "Tooling";
     const String AppRoot = "Application";
 
     const String Title = "Wisp";
@@ -192,6 +196,7 @@ partial interface Settings {
     static IPAddress IP = IPAddress.Parse(cla.url);
     static Int32 Port = cla.port;
     static String Url = $"http://{cla.url}:{Port}/";
+    static DirectoryInfo Tooling = new(Path.Combine(cla.cd, ToolRoot));
     static DirectoryInfo Assets = new(Path.Combine(cla.cd, AssetRoot));
     static DirectoryInfo App = new(Path.Combine(cla.cd, AppRoot));
 
@@ -208,16 +213,12 @@ partial interface Settings {
     }
 }
 
-static class FileSysExtensions {
-    internal static String Get(this DirectoryInfo self, String file) =>
-        File.ReadAllText(Path.Combine(self.FullName, file));
-}
-
-partial interface Settings {
+interface BootScripts {
     // Browser Scripts
-    static String KernelScript = $$"""
+    static String POSTScript = $$"""
         <html><head><title>{{Title}}</title>
         <script>
+        {{LanguageExtensions()}}
         self.AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
         self.cmd = new WebSocket(location.origin.replace('http', 'ws'), '{{CommandProtocol}}');
         cmd.onmessage = async (msg) => {
@@ -234,34 +235,17 @@ partial interface Settings {
         </script></head></html>
         """;
 
-    static String BusScript = $$"""
-        self.bus = new WebSocket(location.origin.replace('http', 'ws') + '/bus', '{{MessageProtocol}}');
-        bus.onmessage = async (msg) => {
-            try {
-            const result = await (new this.AsyncFunction(msg.data))();
-            const response = result ?? '{{SuccessDefault}}';
-            bus.send(response);
-            }
-            catch (e) {
-               bus.send(`{{FailDefault}}: ${e.stack}`);
-               console.log(e.stack);
-            }
-        };
-        """;
-
-    static String BootScript = $$$"""
-        self.kebab = (str) => str.replace(/([a-z])([A-Z])/g, '$1-$2').replace('_','-').toLowerCase();
-        self.flat = (v) => Array.isArray(v) ? v.join('') : v;
-        self.crunch = (v) => v.replace(/\s\s+/g, ' ').trim();
+    static String KernelScript = $$$"""
         self.customRules = new CSSStyleSheet();
         document.adoptedStyleSheets.push(customRules);
         customRules.define = (tag, styles) => { customRules.insertRule(`${tag} {${flat(styles)}}`); };
         self.elms = class { };
+        self.abs = class { };
         self.regElm = (cls, stylettes) => {
             const tag = kebab(cls.name);
             customElements.define(tag, cls);
             elms[cls.name] = cls;
-            if(stylettes != null) customRules.define(tag, stylettes);
+            if (stylettes != null) customRules.define(tag, stylettes);
             return elms[cls.name];
         };
         self.addToBody = (e) => document.body.appendChild(e);
@@ -272,12 +256,26 @@ partial interface Settings {
         return 'CES Mounted';
         """;
 
-    const String HttpHeader =
+    static String LanguageExtensions() => $$"""
+        self.Fault = (i) => { throw new Error(i); };
+        self.Required = (i) => { return (i != null) ? i : Fault(`${i} Required`); };
+        self.Default = (i, d) => { return (i != null) ? i : d; };
+        self.Validate = (i, validationFn, errorMessage = 'Validation failed') => { return validationFn(i) ? i : Fault(errorMessage); };
+        self.Exists = (v) => { return v !== null && typeof v !== 'undefined'; };
+        self.NotExists = (v) => { return !(v !== null && typeof v !== 'undefined'); };
+        self.kebab = (str) => str.replace(/([a-z])([A-Z])/g, '$1-$2').replace('_','-').toLowerCase();
+        self.flat = (v) => Array.isArray(v) ? v.join('') : v;
+        self.crunch = (v) => v.replace(/\s\s+/g, ' ').trim();
+        """;
+}
+
+internal interface HttpHelpers {
+    internal const String HttpHeader =
     "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
 
-    const String NotSupportedHeader =
+    internal const String NotSupportedHeader =
     "HTTP/1.1 501 Not Implemented\r\nContent-Type: text/plain\r\n\r\nThe requested feature is not implemented.";
 
-    static String IcoHeader(Byte[] ico)
+    internal static String IcoHeader(Byte[] ico)
     => $"HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nContent-Length: {ico.Length}\r\n\r\n";
 }

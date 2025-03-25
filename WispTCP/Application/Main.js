@@ -1,14 +1,14 @@
-﻿class PageHeader extends HTMLElement {
-    static { regElm(this); };
-    #titleText = document.title;
+﻿self.Home = class { };
+
+class PageHeader extends HTMLElement {
+    static { regElmOn(Home, this); };
     constructor(title) {
         super();
-        this.textContent = this.#titleText;
     }
 };
 
 class PageContent extends HTMLElement {
-    static { regElm(this); };
+    static { regElmOn(Home, this); };
 };
 
 customRules.define("page-header", [
@@ -20,8 +20,14 @@ customRules.define("page-header", [
 
 customRules.define("page-content", [`background-color:lightgrey;`]);
 
+customRules.define("centered-label[stype='typed']", [`background-color:green;`]);
+
 
 self.Header = new PageHeader();
-self.Content = new PageContent();
+self.Lab = new elms.CenteredLabel("Me").stype("typed");
 
+self.Content = new Home.PageContent();
+
+
+addTo(Header, Lab);
 addManyToBody([Header, Content]);
