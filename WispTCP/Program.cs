@@ -39,8 +39,8 @@ static class Program {
 
     // User Port
     internal interface IO {
-        internal String RunCmd(String cmd) => CommandPort.TripCmd(cmd);
-        internal Task<String> RunCmdAsync(String cmd, String? log = null) => Program.RunCmdAsync(cmd, log);
+        internal static String RunCmd(String cmd) => CommandPort.TripCmd(cmd);
+        internal static Task<String> RunCmdAsync(String cmd, String? log = null) => Program.RunCmdAsync(cmd, log);
 
         internal static Boolean RunAppFile(out String result, String file, String? log = null) {
             result = CommandPort.TripCmd(App.Get(file));
@@ -70,14 +70,16 @@ static class Program {
 
         WebBiosConnect:
         GetRequest(out request_, out stream_);
+        L("Browser POSTed");
         stream_.Write(AcceptSocket(request_, CommandProtocol));
         CommandPort = WebSocket.CreateFromStream(stream_, true, CommandProtocol, TimeSpan.FromMinutes(2));
+        L("Command Link Established");
 
         SharedContext:
-        Send(Context.Script, "Context");
+        Send(Context.Script, "Shared Context Registered");
 
         WebBusConnect:
-        Send(BusConfig.BusSocket, "Message Socket");
+        Send(BusConfig.BusSocket, "Message Socket Requested");
         // Favicon order is unpredictable, so this crap...
         WebSocket? temp = null;
         GetRequest(out request_, out stream_);
@@ -85,30 +87,29 @@ static class Program {
         GetRequest(out request_, out stream_);
         if (MsgIco(out WebSocket? b_)) temp = b_;
         MessagePort = temp ?? throw new("No Message Socket");
+        L("Message Link Established");
 
         WebBusInit:
         MessageBus.Bind(MessagePort);
 
         CES:
-        Send(KernelScript, "BootScript");
-        Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling");
-        Send(Tooling.Get("ElmTooling.js"), "Elms Tooling");
+        Send(KernelScript, "CES Kernel Installed");
+        Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling Mounted");
+        Send(Tooling.Get("ElmTooling.js"), "Elms Tooling Mounted");
 
         Assets:
-        Send(Assets.Get("Stylex.js"), "Stylex");
-        Send(Assets.Get("Elements.js"), "Elements");
-
-        BusListen:
-
+        Send(Assets.Get("Stylex.js"), "Stylex Registered");
+        Send(Assets.Get("Elements.js"), "Common Elements Registered ");
 
         RequestListen:
         Task.Run(static () => {
-            while (true) {
-                GetRequest(out _, out NetworkStream stream);
-                Byte[] headerBytes = UTF8.GetBytes(NotSupportedHeader);
-                stream.Write(headerBytes);
-                stream.Close();
-            }
+            L("Network Handler Listening");
+            loop:
+            GetRequest(out _, out NetworkStream stream);
+            Byte[] headerBytes = UTF8.GetBytes(NotSupportedHeader);
+            stream.Write(headerBytes);
+            stream.Close();
+            goto loop;
         });
 
         /* **********   Locals   ********** */
@@ -155,10 +156,13 @@ static class Program {
     }
 
     static async Task Main() {
+        L("/* Starting Process Code */");
         BusConfig.ConfigClient(ContextProcess.BusPort);
         BusConfig.Enable();
-        await RunCmdAsync(ContextProcess.Gui, "Gui");
-        await RunCmdAsync(ContextProcess.Main, "Gui Main");
+        MessageBus.Start();
+        await RunCmdAsync(ContextProcess.Gui, "Gui Shell Configured");
+        await RunCmdAsync(ContextProcess.Page, "Gui Page Built");
+        await ContextProcess.Start();
         await Task.Delay(-1);
     }
 

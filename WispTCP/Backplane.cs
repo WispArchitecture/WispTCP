@@ -13,15 +13,17 @@ static class MessageBus {
     static readonly Channel<MsgFrame> buswrite = Channel.CreateUnbounded<MsgFrame>();
 
     static MessageBus() {
-        L("Bus Posted");
+        L("Backplane Posted");
     }
 
     internal static void Bind(WebSocket socket) {
         ws = socket;
+        L("Message Bus Constructed");
     }
 
     internal static void Start() {
         Task.Run(static async () => {
+            L("Server BusPort Operating");
             loop:
             socket.WaitOnText(out String msg);
             var a_ = ParseMessage(msg);
@@ -62,6 +64,7 @@ static class MessageBus {
         internal static Boolean ConfigClient(String busPortScript) {
             var success = socket.TripCmd(busPortScript);
             socket.TripCmd("console.log('Bus Configured')");
+            L("Client BusPort Configured");
             return true;
         }
 
@@ -69,6 +72,7 @@ static class MessageBus {
             socket.TripCmd($$"""
             self.bus.onmessage = (msg) => { console.log(msg.data); }
             """);
+            L("Client BusPort Operating");
             return true;
         }
     }
