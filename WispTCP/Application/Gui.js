@@ -6,6 +6,6 @@ customRules.define("body", [
     "head head" 48px
     "left right" auto
     "foot foot" 30px
-    / 120px auto;
+    / 200px auto;
 `]);
 
