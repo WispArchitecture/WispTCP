@@ -28,4 +28,8 @@
         static FlexWeight = (weight) => this.Box + `flex:0 0 ${weight};`;
         static FlexFixed = (sizepx) => this.Box + `flex:0 0 ${sizepx}px;`;
     };
+
+    static Cell = class {
+        static Box = `position:relative;display:inline-block;`
+    };
 };

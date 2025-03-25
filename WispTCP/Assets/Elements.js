@@ -1,7 +1,7 @@
 ﻿//::Uses:ElmTooling
 
 class CenteredLabel extends SElement {
-    static { regElm(this); }
+    static { regElm(this,[]); }
     #text;
     constructor(text) {
         super();
@@ -88,7 +88,7 @@ class ArrayValue extends HTMLElement {
     };
 };
 
-class ActionButton extends HTMLElement {
+class ActionButton extends SElement {
     static {
         const tag = kebab(this.name);
         customElements.define(tag, this);
