@@ -115,7 +115,7 @@ static class Program {
 
         static void Send(String cmd, String? log = null) {
             var a_ = CommandPort.TripCmd(cmd);
-            if(a_.StartsWith(FailDefault)) throw new Exception(a_);
+            if (a_.StartsWith(FailDefault)) throw new Exception(a_);
             String b_ = a_ == SuccessDefault && log != null ? log : a_;
             if (log != null) L(b_);
         }
@@ -170,7 +170,11 @@ static class Program {
                 String result = CommandPort.TripCmd(cmd);
                 if (result.StartsWith("fail", StringComparison.OrdinalIgnoreCase)) {
                     tcs.SetException(new InvalidOperationException($"Task failed: {result}"));
-                } else { tcs.SetResult(result); }
+                } else {
+                    tcs.SetResult(result);
+                    String b_ = result == SuccessDefault && log != null ? log : result;
+                    if (log != null) L(b_);
+                }
             } catch (Exception ex) { tcs.SetException(ex); }
         });
 
