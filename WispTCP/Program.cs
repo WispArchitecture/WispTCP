@@ -163,6 +163,7 @@ static class Program {
         await RunCmdAsync(ContextProcess.Gui, "Gui Shell Configured");
         await RunCmdAsync(ContextProcess.Page, "Gui Page Built");
         await ContextProcess.Start();
+        L("WispNode Execution Complete. Terminating.");
         await Task.Delay(-1);
     }
 
