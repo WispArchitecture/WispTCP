@@ -1,0 +1,8 @@
+{
+    "profiles": {
+        "WispTCP": {
+            "commandName": "Project",
+            "commandLineArgs": "127.0.0.1 5150 E:\\Min\\Min.exe"
+        }
+    }
+}

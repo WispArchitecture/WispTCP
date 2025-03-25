@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+        <RootNamespace></RootNamespace>
+        <StartupObject>Program</StartupObject>
+        <NoWarn>CS0164</NoWarn>
+        <NoWarn>CA1050</NoWarn>
+        <NoWarn>IDE0290</NoWarn>
+    </PropertyGroup>
+</Project>
