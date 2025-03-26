@@ -1,17 +1,24 @@
-﻿using System;
+﻿#pragma warning disable CS0164 // This label has not been referenced
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using static Program.IO;
 
 static class ContextProcess {
     // User Port
-    internal static async Task Gui() => await BuildGui();
-    internal static async Task Page() => await BuildPage();
+    internal static async Task Init() => await Initialize();
+    internal static async Task Start() => await ProcessStart();
+    static DirectoryInfo App = new(Path.Combine(cla.cd, AppRoot));
 
-    static async Task BuildGui() {
-        await RunCmdAsync(App.Get("Gui.js"), "Gui Page Built");
+
+    static async Task Initialize() {
+        await BuildPage();
+        BomAssets: // Customize Machine
+        await RunCmdAsync(BOM.TaxelScript, "Taxels Registered ");
     }
 
     static async Task BuildPage() {
+        await RunCmdAsync(App.Get("Page.js"), "Gui Shell Configured");
         await RunCmdAsync(App.Get("Page.js"), "Gui Shell Configured");
         await RunCmdAsync(App.Get("KeyProcesses\\PersonContact.etjs"), "Contact Taxel Registeres");
     }
@@ -21,7 +28,6 @@ static class ContextProcess {
     }
 
     interface DataBus {
-
         internal static String ClientShape() => $$"""
         console.log('DataBus Configured');
         """;
@@ -31,7 +37,7 @@ static class ContextProcess {
     {{DataBus.ClientShape()}}
     """;
 
-    internal static async Task Start() {
+    internal static async Task ProcessStart() {
         L("Server Process Started");
         await RunCmdAsync(BuildMain(), "Browser Process Started");
         L("/* Starting Key Processes */");
@@ -44,7 +50,7 @@ static class ContextProcess {
         L("Performing Process Steps...");
         L(" - New Membership Started");
         await Join.Start();
-        await Contact.Start();
+        await EnrollmentProcess.Start();
         L(" - Contact Info Collected");
         await Interests.Start();
         L(" - Intrests Recorded");
@@ -59,5 +65,14 @@ static class ContextProcess {
         L(" - Flow Transits Sent");
         L(" ...Messages Sent");
         await Task.CompletedTask;
+    }
+
+    interface BOM {
+        static String[] Taxels = [
+            "PersonName.etjs",
+        "StreetUsa.etjs",
+        "MuniUsa.etjs"
+        ];
+        static String TaxelScript => Scripting.Tooling.MergeFiles(Taxels, Path.Combine(cla.cd, TaxelRoot));
     }
 }

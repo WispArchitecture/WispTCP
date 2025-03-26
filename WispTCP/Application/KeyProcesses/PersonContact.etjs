@@ -1,5 +1,5 @@
-﻿var containerSkel = stylex.Lane.Box + `height:80px; width600px;`;
-var containerSkin = `border:1px solid black;gap:4px;`;
+﻿var containerSkel = stylex.Lane.Box + `height:80px; width:600px;`;
+var containerSkin = `border:1px solid black;gap:4px;padding:4px;`;
 
 class PersonContact extends HTMLElement {
     Name;
@@ -9,19 +9,24 @@ class PersonContact extends HTMLElement {
         regElm(this, [containerSkel, containerSkin]);
     };
 
-    constructor() {
+    constructor({
+        Name: { first, middle, last } = {},
+        Street: { number, road, unit } = {},
+        Muni: { city, county, state } = {},
+    } = {}) {
         super();
-        this.Name = new elms.PersonName({ first: "Randy", middle: "D", last: "Buchholz" });
-        this.Street = new elms.StreetUsa({ number: "512", road: "Maple" });
-        this.Muni = new elms.MuniUsa({ city: "Austin", county: "Travis", state: "Texas" });
+        this.Name = new elms.PersonName( { first, middle, last });
+        this.Street = new elms.StreetUsa( { number, road, unit });
+        this.Muni = new elms.MuniUsa({ city, county, state });
         addManyTo(this, [this.Name, this.Street, this.Muni]);
     };
 };
 
-var contact = new elms.PersonContact();
-addTo(Page.Right, contact);
+var contact = new elms.PersonContact({
+    Name: { first: "Randy", middle: "D", last: "Buchholz" },
+    Street: { number: "512", road: "Maple" },
+    Muni: { city: "Austin", county: "Travis", state: "Texas" }
+});
 
-//var nameRow = new elms.PersonName({ first: "Randy", middle: "D", last: "Buchholz" });
-//var streetRow = new elms.StreetUsa({ number: "512", road: "Maple" });
-//var muniRow = new elms.MuniUsa({ city: "Austin", county: "Travis", state: "Texas" });
-//addManyTo(Page.Right, [nameRow, streetRow, muniRow]);
+var c2 = new elms.PersonContact();
+addTo(Page.Right, contact);

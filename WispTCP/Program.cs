@@ -41,18 +41,6 @@ static class Program {
     internal interface IO {
         internal static String RunCmd(String cmd) => CommandPort.TripCmd(cmd);
         internal static Task<String> RunCmdAsync(String cmd, String? log = null) => Program.RunCmdAsync(cmd, log);
-
-        internal static Boolean RunAppFile(out String result, String file, String? log = null) {
-            result = CommandPort.TripCmd(App.Get(file));
-            if (log != null) L(log);
-            return !result.StartsWith(FailDefault);
-        }
-
-        internal static Boolean RunAssetFile(out String result, String file, String? log = null) {
-            result = CommandPort.TripCmd(Assets.Get(file));
-            if (log != null) L(log);
-            return !result.StartsWith(FailDefault);
-        }
     }
 
     // Build the static machine (Mecha)
@@ -101,8 +89,8 @@ static class Program {
         Send(Assets.Get("Stylex.js"), "Stylex Registered");
         Send(Assets.Get("Elements.vs.js"), "Common Elements Registered ");
 
-        BomAssets: // Customize Machine
-        Send(BOM.TaxelScript, "Taxels Registered ");
+        BuildGuiShell:
+        Send(Assets.Get("Shell.js"), "Gui Shell Installed");
 
         RequestListen:
         Task.Run(static () => {
@@ -163,9 +151,8 @@ static class Program {
         BusConfig.ConfigClient(ContextProcess.BusPort);
         BusConfig.Enable();
         MessageBus.Start();
-        await ContextProcess.Gui();
-        await ContextProcess.Page();
-        await ContextProcess.Start();
+        //await ContextProcess.Init();
+        //await ContextProcess.Start();
         L("WispNode Execution Complete. Terminating.");
         await Task.Delay(-1);
     }
@@ -211,7 +198,6 @@ interface Settings {
     static DirectoryInfo Tooling = new(Path.Combine(cla.cd, ToolRoot));
     static DirectoryInfo Taxels = new(Path.Combine(cla.cd, TaxelRoot));
     static DirectoryInfo Assets = new(Path.Combine(cla.cd, AssetRoot));
-    static DirectoryInfo App = new(Path.Combine(cla.cd, AppRoot));
 
     /* **********   Locals   ********** */
     static (String cd, String url, Int32 port, String browser) ParseArgs() {
@@ -224,15 +210,6 @@ interface Settings {
         cla[3]
         );
     }
-}
-
-interface BOM {
-    static String[] Taxels = [
-        "PersonName.etjs",
-        "StreetUsa.etjs",
-        "MuniUsa.etjs"
-    ];
-    static String TaxelScript => Scripting.Tooling.MergeFiles(Taxels, Path.Combine(cla.cd, TaxelRoot));
 }
 
 interface BootScripts {
