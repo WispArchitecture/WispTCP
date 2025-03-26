@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 using static HttpHelpers;
 using static BootScripts;
-using BusConfig = MessageBus.Config;
+//using BusConfig = Backplane.Config;
 
 using static System.Text.Encoding;
 // 
@@ -27,7 +27,7 @@ interface Context {
 }
 
 static class Program {
-    static Boolean post = Tracer.POST && MessageBus.POST;
+    static Boolean post = Tracer.POST && Backplane.POST;
     // Node
     static readonly TcpListener Listener;
     static readonly WebSocket CommandPort;
@@ -43,7 +43,6 @@ static class Program {
         internal static Task<String> RunCmdAsync(String cmd, String? log = null) => Program.RunCmdAsync(cmd, log);
     }
 
-    // Build the static machine (Mecha)
     static Program() {
         if (!post) throw new Exception("POST Failed");
         Environment:
@@ -67,7 +66,7 @@ static class Program {
         Send(Context.Script, "Shared Context Registered");
 
         WebBusConnect:
-        Send(BusConfig.BusSocket, "Message Socket Requested");
+        Send(Backplane.Config.MessageSocketCmd, "Message Socket Requested");
         // Favicon order is unpredictable, so this crap...
         WebSocket? temp = null;
         GetRequest(out request_, out stream_);
@@ -78,19 +77,19 @@ static class Program {
         L("Message Link Established");
 
         WebBusInit:
-        MessageBus.Bind(MessagePort);
+        Backplane.Config.Bind(MessagePort);
 
         CES:
         Send(KernelScript, "CES Kernel Installed");
         Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling Mounted");
         Send(Tooling.Get("ElmTooling.js"), "Elms Tooling Mounted");
 
-        CommonAssets: // Standard Machine
+        CommonAssets:
         Send(Assets.Get("Stylex.js"), "Stylex Registered");
         Send(Assets.Get("Elements.vs.js"), "Common Elements Registered ");
 
-        BuildGuiShell:
-        Send(Assets.Get("Shell.js"), "Gui Shell Installed");
+        BuildGuiShell: // Browser Layout and DomDriver
+        Send(Assets.Get(ShellScript), "Gui Shell Installed");
 
         RequestListen:
         Task.Run(static () => {
@@ -148,13 +147,13 @@ static class Program {
 
     static async Task Main() {
         L("/* Starting Process Code */");
-        BusConfig.ConfigClient(ContextProcess.BusPort);
-        BusConfig.Enable();
-        MessageBus.Start();
+        Backplane.Config.ConfigClient();
+        Backplane.Config.Enable();
+        Backplane.Run();
         //await ContextProcess.Init();
         //await ContextProcess.Start();
-        L("WispNode Execution Complete. Terminating.");
         await Task.Delay(-1);
+        L("WispNode Execution Complete. Terminating.");
     }
 
     /* **********   Work   ********** */
@@ -188,6 +187,7 @@ interface Settings {
     const String AppRoot = "Application";
 
     const String Title = "Wisp";
+    const String ShellScript = "Shell.js";
 
     //commandLineArgs: "127.0.0.1 5150 E:\Min\Min.exe"
     static (String cd, String url, Int32 port, String browser) cla = ParseArgs();
