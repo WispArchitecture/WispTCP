@@ -28,6 +28,7 @@ cmd.onmessage = async (msg) => {
 self.customRules = new CSSStyleSheet();
 document.adoptedStyleSheets.push(customRules);
 customRules.define = (tag, styles) => { customRules.insertRule(`${tag} {${flat(styles)}}`); };
+self.cls = class { };
 self.elms = class { };
 self.abs = class { };
 self.regElm = (cls, stylettes) => {

@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 using static HttpHelpers;
 using static BootScripts;
-//using BusConfig = Backplane.Config;
 
 using static System.Text.Encoding;
 // 
@@ -64,6 +63,7 @@ static class Program {
 
         SharedContext:
         Send(Context.Script, "Shared Context Registered");
+        Send(GuiSettings, "GuiSettings Registered");
 
         WebBusConnect:
         Backplane.Config.CreateSocket();
@@ -78,9 +78,13 @@ static class Program {
 
         WebBusInit:
         Backplane.Config.Bind(MessagePort);
+        Backplane.Config.ConfigClient();
+        Backplane.Config.Enable();
+        Backplane.Run();
 
         CES:
         Send(KernelScript, "CES Kernel Installed");
+        Send(Tooling.Get("ClassTooling.js"), "Classes Tooling Mounted");
         Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling Mounted");
         Send(Tooling.Get("ElmTooling.js"), "Elms Tooling Mounted");
 
@@ -88,8 +92,8 @@ static class Program {
         Send(Assets.Get("Stylex.js"), "Stylex Registered");
         Send(Assets.Get("Elements.vs.js"), "Common Elements Registered ");
 
-        BuildGuiShell: // Browser Layout and DomDriver
-        Send(Assets.Get(ShellScript), "Gui Shell Installed");
+        GuiShellBase:
+        Send(Assets.Get(ShellBase), "Shell Base Installed");
 
         RequestListen:
         Task.Run(static () => {
@@ -147,11 +151,8 @@ static class Program {
 
     static async Task Main() {
         L("/* Starting Process Code */");
-        Backplane.Config.ConfigClient();
-        Backplane.Config.Enable();
-        Backplane.Run();
-        //await ContextProcess.Init();
-        //await ContextProcess.Start();
+        await ContextProcess.Init();
+        await ContextProcess.Start();
         await Task.Delay(-1);
         L("WispNode Execution Complete. Terminating.");
     }
@@ -184,10 +185,9 @@ interface Settings {
     const String AssetRoot = "Assets";
     const String TaxelRoot = "Taxels";
     const String ToolRoot = "Tooling";
-    const String AppRoot = "Application";
 
     const String Title = "Wisp";
-    const String ShellScript = "Shell.js";
+    const String ShellBase = "BodyGrid_Head_LeftRight_Foot.js";
 
     //commandLineArgs: "127.0.0.1 5150 E:\Min\Min.exe"
     static (String cd, String url, Int32 port, String browser) cla = ParseArgs();
@@ -198,6 +198,8 @@ interface Settings {
     static DirectoryInfo Tooling = new(Path.Combine(cla.cd, ToolRoot));
     static DirectoryInfo Taxels = new(Path.Combine(cla.cd, TaxelRoot));
     static DirectoryInfo Assets = new(Path.Combine(cla.cd, AssetRoot));
+
+    static String GuiSettings = File.ReadAllText(cla.cd + "Settings.js");
 
     /* **********   Locals   ********** */
     static (String cd, String url, Int32 port, String browser) ParseArgs() {

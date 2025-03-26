@@ -85,6 +85,11 @@ static class WebSocketExtensions {
         _ = self.SendAsync(UTF8.GetBytes(msg), 0, true, NC);
     }
 
+    internal static void SendFile(this WebSocket self, String path) {
+        var msg = System.IO.File.ReadAllText(path);
+        _ = self.SendAsync(UTF8.GetBytes(msg), 0, true, NC);
+    }
+
     internal static void WaitOnText(this WebSocket self, out String msg) {
         ArraySegment<Byte> buf = WebSocket.CreateServerBuffer(1024);
         msg = UTF8.GetString(buf[..(self.ReceiveAsync(buf, NC).Result).Count]);

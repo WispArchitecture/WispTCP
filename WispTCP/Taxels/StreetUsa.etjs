@@ -1,11 +1,4 @@
-﻿var lineHeight = 20;
-
-var dataCellSkel = `position:relative;display:inline-flex;`;
-var dataCellSkin = `border:1px solid black;padding:0 0 0 8px;`;
-var dataRowSkel = `position:relative;display:inline-flex;height:${lineHeight}px;`;
-var dataRowSkin = `gap:4px;`;
-
-class StreetUsa extends HTMLElement {
+﻿class StreetUsa extends HTMLElement {
     Number;
     Road;
     Unit;

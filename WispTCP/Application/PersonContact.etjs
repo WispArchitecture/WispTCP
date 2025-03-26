@@ -1,5 +1,7 @@
-﻿var containerSkel = stylex.Lane.Box + `height:80px; width:600px;`;
-var containerSkin = `border:1px solid black;gap:4px;padding:4px;`;
+﻿const cfg = contactSettings;
+
+var containerSkel = stylex.Lane.Box + `height:auto; width:${cfg.width}px;`;
+var containerSkin = `border:1px solid black;gap:${cfg.gap}px;padding:${cfg.pad}px;`;
 
 class PersonContact extends HTMLElement {
     Name;
@@ -22,11 +24,3 @@ class PersonContact extends HTMLElement {
     };
 };
 
-var contact = new elms.PersonContact({
-    Name: { first: "Randy", middle: "D", last: "Buchholz" },
-    Street: { number: "512", road: "Maple" },
-    Muni: { city: "Austin", county: "Travis", state: "Texas" }
-});
-
-var c2 = new elms.PersonContact();
-addTo(Page.Right, contact);

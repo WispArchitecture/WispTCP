@@ -11,4 +11,8 @@
         <NoWarn>CA1050</NoWarn>
         <NoWarn>IDE0290</NoWarn>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Application\KeyProcesses\" />
+    </ItemGroup>
 </Project>

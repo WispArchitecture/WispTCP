@@ -5,57 +5,80 @@ using System.Threading.Tasks;
 using static Program.IO;
 
 static class ContextProcess {
-    // User Port
-    internal static async Task Init() => await Initialize();
-    internal static async Task Start() => await ProcessStart();
-    static DirectoryInfo App = new(Path.Combine(cla.cd, AppRoot));
+    const String ApplicationRoot = "Application";
+    static readonly DirectoryInfo FileRoot = new(Path.Combine(cla.cd, ApplicationRoot));
+    static readonly String TaxelStore = Path.Combine(cla.cd, TaxelRoot);
 
+    internal static async Task Init() => await Initialize();
+    internal static async Task Start() => await StartProcess();
+
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    interface BOM {
+        static String[] TaxelParts = [
+            "FormsConfig.js",
+            "PersonName.etjs",
+            "StreetUsa.etjs",
+            "MuniUsa.etjs"
+        ];
+        static String[] TaxelComponents = [
+            "PersonContact.etjs"
+        ];
+        static String PartsScript => Scripting.Tooling.MergeFiles(TaxelParts, TaxelStore);
+        static String ComponentsScript => Scripting.Tooling.MergeFiles(TaxelComponents, FileRoot.FullName);
+    }
 
     static async Task Initialize() {
-        await BuildPage();
-        BomAssets: // Customize Machine
-        await RunCmdAsync(BOM.TaxelScript, "Taxels Registered ");
+        ShellAreas:
+        await RunCmdAsync(FileRoot.Get("ShellAreas.js"), "Shell Areas Created");
+        BomParts:
+        await RunCmdAsync(BOM.PartsScript, "Components Parts Registered ");
+        await RunCmdAsync(BOM.ComponentsScript, "Components Registered ");
+        ShellControls:
+        await RunCmdAsync(FileRoot.Get("ShellControls.js"), "Shell Controls Added");
     }
 
-    static async Task BuildPage() {
-        await RunCmdAsync(App.Get("Page.js"), "Gui Shell Configured");
-        await RunCmdAsync(App.Get("Page.js"), "Gui Shell Configured");
-        await RunCmdAsync(App.Get("KeyProcesses\\PersonContact.etjs"), "Contact Taxel Registeres");
+    static async Task StartProcess() {
+        ShowContact();
+        await Task.CompletedTask;
     }
 
-    static String BuildMain() {
-        return App.Get("Main.js");
-    }
+    static void ShowContact() {
+        String script = $$"""
+        const contact = new elms.PersonContact({
+        Name: { first: "Randy", middle: "D", last: "Buchholz" },
+        Street: { number: "512", road: "Maple" },
+        Muni: { city: "Austin", county: "Travis", state: "Texas" }
+        });
 
-    interface DataBus {
-        internal static String ClientShape() => $$"""
-        console.log('DataBus Configured');
+        addTo(Page.Right, contact);
         """;
+        RunCmd(script);
     }
+    //static String BuildMain() {
+    //    return FileRoot.Get("Main.js");
+    //}
 
-    internal static String BusPort => $$"""
-    {{DataBus.ClientShape()}}
-    """;
-
-    internal static async Task ProcessStart() {
-        L("Server Process Started");
-        await RunCmdAsync(BuildMain(), "Browser Process Started");
-        L("/* Starting Key Processes */");
-        await KeyProcesses();
-        L("/* Starting Messaging */");
-        await Messaging();
-    }
+    //internal static async Task ProcessStart() {
+    //    //L("Server Process Started");
+    //    //await RunCmdAsync(BuildMain(), "Browser Process Started");
+    //    //L("/* Starting Key Processes */");
+    //    //await KeyProcesses();
+    //    //L("/* Starting Messaging */");
+    //    //await Messaging();
+    //}
 
     static async Task KeyProcesses() {
-        L("Performing Process Steps...");
-        L(" - New Membership Started");
-        await Join.Start();
-        await EnrollmentProcess.Start();
-        L(" - Contact Info Collected");
-        await Interests.Start();
-        L(" - Intrests Recorded");
-        await Join.Finish();
-        L(" - New Membership Complete");
+        //L("Performing Process Steps...");
+        //L(" - New Membership Started");
+        //await Join.Start();
+        //await EnrollmentProcess.Start();
+        //L(" - Contact Info Collected");
+        //await Interests.Start();
+        //L(" - Intrests Recorded");
+        //await Join.Finish();
+        //L(" - New Membership Complete");
+        await Task.CompletedTask;
         L(" ...Process Steps Executed Successfully");
     }
 
@@ -65,14 +88,5 @@ static class ContextProcess {
         L(" - Flow Transits Sent");
         L(" ...Messages Sent");
         await Task.CompletedTask;
-    }
-
-    interface BOM {
-        static String[] Taxels = [
-            "PersonName.etjs",
-        "StreetUsa.etjs",
-        "MuniUsa.etjs"
-        ];
-        static String TaxelScript => Scripting.Tooling.MergeFiles(Taxels, Path.Combine(cla.cd, TaxelRoot));
     }
 }
