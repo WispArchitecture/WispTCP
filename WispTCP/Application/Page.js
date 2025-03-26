@@ -96,7 +96,3 @@ var Finalize = new elms.ActionButton("Finalize", () => Page.ShowView("Finalize")
 addTo(Page.Header, TitleLabel);
 addManyTo(Page.Left, [About, Start, Contact, Interest, Finalize]);
 
-var nameRow = new elms.PersonName({first: "Randy", middle: "D", last: "Buchholz"});
-var streetRow = new elms.StreetUsa({number:"512", road:"Maple"});
-var muniRow = new elms.MuniUsa({city:"Austin", county: "Travis", state: "Texas"});
-addManyTo(Page.Right, [nameRow, streetRow, muniRow]);

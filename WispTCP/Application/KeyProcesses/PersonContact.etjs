@@ -1,0 +1,27 @@
+﻿var containerSkel = stylex.Lane.Box + `height:80px; width600px;`;
+var containerSkin = `border:1px solid black;gap:4px;`;
+
+class PersonContact extends HTMLElement {
+    Name;
+    Street;
+    Muni;
+    static {
+        regElm(this, [containerSkel, containerSkin]);
+    };
+
+    constructor() {
+        super();
+        this.Name = new elms.PersonName({ first: "Randy", middle: "D", last: "Buchholz" });
+        this.Street = new elms.StreetUsa({ number: "512", road: "Maple" });
+        this.Muni = new elms.MuniUsa({ city: "Austin", county: "Travis", state: "Texas" });
+        addManyTo(this, [this.Name, this.Street, this.Muni]);
+    };
+};
+
+var contact = new elms.PersonContact();
+addTo(Page.Right, contact);
+
+//var nameRow = new elms.PersonName({ first: "Randy", middle: "D", last: "Buchholz" });
+//var streetRow = new elms.StreetUsa({ number: "512", road: "Maple" });
+//var muniRow = new elms.MuniUsa({ city: "Austin", county: "Travis", state: "Texas" });
+//addManyTo(Page.Right, [nameRow, streetRow, muniRow]);

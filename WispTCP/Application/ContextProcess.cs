@@ -2,14 +2,23 @@
 using System.Threading.Tasks;
 using static Program.IO;
 
-class ContextProcess {
+static class ContextProcess {
     // User Port
-    internal static String Gui => BuildGui();
-    internal static String Page => BuildPage();
+    internal static async Task Gui() => await BuildGui();
+    internal static async Task Page() => await BuildPage();
 
-    static String BuildGui() { return App.Get("Gui.js"); }
-    static String BuildPage() { return App.Get("Page.js"); }
-    static String BuildMain() { return App.Get("Main.js"); }
+    static async Task BuildGui() {
+        await RunCmdAsync(App.Get("Gui.js"), "Gui Page Built");
+    }
+
+    static async Task BuildPage() {
+        await RunCmdAsync(App.Get("Page.js"), "Gui Shell Configured");
+        await RunCmdAsync(App.Get("KeyProcesses\\PersonContact.etjs"), "Contact Taxel Registeres");
+    }
+
+    static String BuildMain() {
+        return App.Get("Main.js");
+    }
 
     interface DataBus {
 
