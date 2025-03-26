@@ -1,4 +1,12 @@
-﻿self.bus = new WebSocket(location.origin.replace('http', 'ws') + '/bus', '{{MessageProtocol}}');
+﻿//:[Create
+self.bus = new WebSocket(location.origin.replace('http', 'ws') + '/bus', '{{MessageProtocol}}');
+bus.onopen = () => {
+    bus.CKeyEmpty = '_____';
+    bus.CKeyChk = (ckey) => { if (ckey.length != 5) throw new Error("CKeyLength"); };
+    bus.sendSignal = (signal, ckey = bus.CKeyEmpty) => { bus.CKeyChk(ckey); bus.send(`sig${ckey}${signal}`); };
+    bus.sendData = (data, ckey = bus.CKeyEmpty) => { bus.CKeyChk(ckey); bus.send(`dat${ckey}${data}`); };
+    bus.sendMessage = (msg, ckey = bus.CKeyEmpty) => { bus.CKeyChk(ckey); bus.send(`msg${ckey}${msg}`); };
+};
 bus.onmessage = async (msg) => {
     try {
         const result = await (new this.AsyncFunction(msg.data))();
@@ -8,10 +16,12 @@ bus.onmessage = async (msg) => {
     catch (e) {
         bus.send(`{{FailDefault}}: ${e.stack}\n${msg.data}`);
         console.log(e.stack);
-    }
+    };
 };
+//:]Create
 
-class MsgFrame {
+//:[Config
+self.MsgFrame = class MsgFrame {
     constructor(format, ckey, body) {
         this.format = format;
         this.ckey = ckey;
@@ -24,18 +34,13 @@ class MsgFrame {
         const body = msg.slice(8);
         return new MsgFrame(format, ckey, body);
     }
-
-    static CkeyChk = (ckey) => { if (ckey.length != 5) throw new Error("CKeyLength"); };
-
-
 }
-
-
-bus.signal = (signal, ckey = "_____") => { MessageFrame.CKeyChk(ckey); bus.send(`sig${ckey}${signal}`); };
-bus.data = (data, ckey = "_____") => { MessageFrame.CKeyChk(ckey); bus.send(`dat${ckey}${data}`); };
-bus.msg = (msg, ckey = "_____") => { MessageFrame.CKeyChk(ckey); bus.send(`msg${ckey}${msg}`); };
-
 self.BusPortReceiver = async (msg) => {
-    const msgframe = MsgFrame.parseMessage(msg);
+    const msgframe = MsgFrame.parseMessage(msg.data);
     console.log(msgframe);
 };
+//:]Config
+
+//:[Enable:
+self.bus.onmessage = BusPortReceiver;
+//:]Enable:

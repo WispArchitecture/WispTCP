@@ -66,7 +66,7 @@ static class Program {
         Send(Context.Script, "Shared Context Registered");
 
         WebBusConnect:
-        Send(Backplane.Config.MessageSocketCmd, "Message Socket Requested");
+        Backplane.Config.CreateSocket();
         // Favicon order is unpredictable, so this crap...
         WebSocket? temp = null;
         GetRequest(out request_, out stream_);

@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+// Not using a class/struct provides more flexability for Channel readers.
 using MsgFrame = (System.String format, System.String ckey, System.String body);
 
 static class Backplane {
@@ -10,8 +11,7 @@ static class Backplane {
         L("Backplane Posted");
     }
 
-    static WebSocket? ws;
-    static WebSocket socket => ws ?? throw new("No Socket");
+    static WebSocket socket => ws ?? throw new("No Socket"); static WebSocket? ws; // Temporally constrained
 
     interface Format {
         internal const String Message = "msg";
@@ -41,7 +41,10 @@ static class Backplane {
             L("Message Bus Constructed");
         }
 
-        internal static String MessageSocketCmd = $$"""
+        // Used by CommandSocket
+
+        internal static Boolean CreateSocket() {
+            var r_ = Program.IO.RunCmd($$"""
             self.bus = new WebSocket(location.origin.replace('http', 'ws') + '/bus', '{{MessageProtocol}}');
             bus.onopen = () => {
                 bus.CKeyEmpty = '_____';
@@ -61,10 +64,12 @@ static class Backplane {
                    console.log(e.stack);
                 };
             };
-            """;
+            """);
+            return !r_.StartsWith(FailDefault); ;
+        }
 
         internal static Boolean ConfigClient() {
-            String installBusReceiver = $$"""
+            socket.TripCmd($$"""
             self.MsgFrame = class MsgFrame {
                 constructor(format, ckey, body) {
                     this.format = format;
@@ -83,8 +88,8 @@ static class Backplane {
                 const msgframe = MsgFrame.parseMessage(msg.data);
                 console.log(msgframe);
             };
-            """;
-            socket.TripCmd(installBusReceiver);
+            """
+            );
             socket.TripCmd("console.log('Bus Configured')");
             L("Client BusPort Configured");
             return true;
