@@ -12,6 +12,12 @@ static class MessageBus {
     static readonly Channel<MsgFrame> busread = Channel.CreateUnbounded<MsgFrame>();
     static readonly Channel<MsgFrame> buswrite = Channel.CreateUnbounded<MsgFrame>();
 
+    interface Format {
+        internal const String Message = "msg";
+        internal const String Data = "dat";
+        internal const String SIgnal = "sig";
+    }
+
     static MessageBus() {
         L("Backplane Posted");
     }

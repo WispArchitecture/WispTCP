@@ -97,9 +97,12 @@ static class Program {
         Send(Tooling.Get("SheetTooling.js"), "Sheets Tooling Mounted");
         Send(Tooling.Get("ElmTooling.js"), "Elms Tooling Mounted");
 
-        Assets:
+        CommonAssets: // Standard Machine
         Send(Assets.Get("Stylex.js"), "Stylex Registered");
-        Send(Assets.Get("Elements.js"), "Common Elements Registered ");
+        Send(Assets.Get("Elements.vs.js"), "Common Elements Registered ");
+
+        BomAssets: // Customize Machine
+        Send(BOM.TaxelScript, "Taxels Registered ");
 
         RequestListen:
         Task.Run(static () => {
@@ -187,13 +190,13 @@ static class Program {
     }
 }
 
-
 interface Settings {
     const String CommandProtocol = "transit.command";
     const String MessageProtocol = "transit.message";
     const String SuccessDefault = "success";
     const String FailDefault = "fail";
     const String AssetRoot = "Assets";
+    const String TaxelRoot = "Taxels";
     const String ToolRoot = "Tooling";
     const String AppRoot = "Application";
 
@@ -206,6 +209,7 @@ interface Settings {
     static Int32 Port = cla.port;
     static String Url = $"http://{cla.url}:{Port}/";
     static DirectoryInfo Tooling = new(Path.Combine(cla.cd, ToolRoot));
+    static DirectoryInfo Taxels = new(Path.Combine(cla.cd, TaxelRoot));
     static DirectoryInfo Assets = new(Path.Combine(cla.cd, AssetRoot));
     static DirectoryInfo App = new(Path.Combine(cla.cd, AppRoot));
 
@@ -220,6 +224,15 @@ interface Settings {
         cla[3]
         );
     }
+}
+
+interface BOM {
+    static String[] Taxels = [
+        "PersonName.etjs",
+        "StreetUsa.etjs",
+        "MuniUsa.etjs"
+    ];
+    static String TaxelScript => Scripting.Tooling.MergeFiles(Taxels, Path.Combine(cla.cd, TaxelRoot));
 }
 
 interface BootScripts {
@@ -237,7 +250,7 @@ interface BootScripts {
             cmd.send(response);
             }
             catch (e) {
-               cmd.send(`{{FailDefault}}: ${e.stack}`);
+               cmd.send(`{{FailDefault}}: ${e.stack}\n${msg.data}`);
                console.log(e.stack);
             }
         };

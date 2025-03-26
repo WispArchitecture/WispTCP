@@ -1,0 +1,57 @@
+﻿var lineHeight = 20;
+
+var dataCellSkel = `position:relative;display:inline-flex;`;
+var dataCellSkin = `border:1px solid black;padding:0 0 0 8px;`;
+var dataRowSkel = `position:relative;display:inline-flex;height:${lineHeight}px;`;
+var dataRowSkin = `gap:4px;`;
+
+class PersonName extends HTMLElement {
+    First;
+    Middle;
+    Last;
+    static {
+        class NameFirst extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:4;`]);
+            };
+        };
+
+        class NameMiddle extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:1;`]);
+            };
+        };
+
+        class NameLast extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:5;`]);
+            };
+        };
+    };
+
+    static {
+        regElm(this, [dataRowSkel, dataRowSkin]);
+    };
+
+    ShowView(view) {
+        switch (view) {
+            case "FirstLast":
+                clearContent(this);
+                addManyTo(this, [this.First, this.Middle, this.Last]);
+                break;
+            case "LastFirst":
+                clearContent(this);
+                addManyTo(this, [this.Last, this.First, this.Middle]);
+                break;
+        }
+    }
+
+    constructor({first, middle, last}={}) {
+        super();
+        this.First = new elms.NameFirst(first ?? "");
+        this.Middle = new elms.NameMiddle(middle ?? "");
+        this.Last = new elms.NameLast(last ?? "");
+        addManyTo(this, [this.First, this.Middle, this.Last]);
+        this.ShowView("FirstLast");
+    };
+};

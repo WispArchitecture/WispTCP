@@ -1,7 +1,7 @@
 ﻿//::Uses:ElmTooling
 
 class CenteredLabel extends SElement {
-    static { regElm(this,[]); }
+    static { regElm(this, []); }
     #text;
     constructor(text) {
         super();
@@ -10,7 +10,7 @@ class CenteredLabel extends SElement {
     };
 };
 
-class LineLabel extends HTMLElement {
+class LineLabel extends SElement {
     static { regElm(this); }
     #text;
     constructor(text) {
@@ -19,27 +19,36 @@ class LineLabel extends HTMLElement {
     };
 };
 
-class TextInput extends HTMLElement {
+class TextInput extends SElement {
     static {
-        const tag = kebab(this.name);
-        customElements.define(tag, this);
+        regElm(this)
     }
-    Text;
+    #text;
+    get Text() { return this.#text; }
+    set Text(v) { this.#text = v; this.#show(); }
 
-    editStart() { this.contentEditable = true; }
-    editEnd() { this.contentEditable = false; }
-    constructor() {
+    #show() { this.textContent = this.#text; }
+
+    #parse() { return this.textContent; };
+
+    #format() { this.#text; }
+
+    #editStart() { this.contentEditable = true; }
+
+    #editEnd() { this.contentEditable = false; }
+
+    constructor(text) {
         super();
-        this.onclick = () => this.editStart();
-        this.onblur = () => this.editEnd();
+        this.#text = text ?? "";
+        this.onclick = () => this.#editStart();
+        this.onblur = () => this.#editEnd();
+        this.#show();
     }
 };
 
-class NumberValue extends HTMLElement {
+class NumberValue extends SElement {
     static {
-        const tag = kebab(this.name);
-        customElements.define(tag, this);
-        elms[this.name] = this;
+        regElm(this);
     };
 
     value;
@@ -55,11 +64,9 @@ class NumberValue extends HTMLElement {
     }
 }
 
-class ArrayValue extends HTMLElement {
+class ArrayValue extends SElement {
     static {
-        const tag = kebab(this.name);
-        customElements.define(tag, this);
-        elms[this.name] = this;
+        regElm(this);
     };
 
     value = [];
@@ -90,9 +97,7 @@ class ArrayValue extends HTMLElement {
 
 class ActionButton extends SElement {
     static {
-        const tag = kebab(this.name);
-        customElements.define(tag, this);
-        elms[this.name] = this;
+        regElm(this);
     };
 
     label;
@@ -106,6 +111,3 @@ class ActionButton extends SElement {
         this.onclick = this.action;
     };
 };
-
-
-

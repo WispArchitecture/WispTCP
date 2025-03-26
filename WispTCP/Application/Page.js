@@ -17,7 +17,7 @@ var rightSkin = `border-right:1px solid black;background-color:${Pallette.Light}
 var footSkel = `padding:8px;`;
 var footSkin = `border-top:1px solid black;background-color:${Pallette.Dark}`;
 
-var laneButtonSkel = `width:100%;height:30px;font-sizw:18px;` + stylex.CenterText;
+var laneButtonSkel = `width:100%;height:30px;font-size:18px;` + stylex.CenterText;
 var laneActionButtonSkin = `border:1px solid black; background-color:${Pallette.Light};`;
 var laneViewButtonSkin = `border:1px solid black; background-color:${Pallette.Med};`;
 
@@ -44,7 +44,7 @@ self.Page = class Page {
 
         class PageRight extends HTMLElement {
             static {
-                regElm(this, [`grid-area:right;`, stylex.FlexBox,
+                regElm(this, [`grid-area:right;`, stylex.Lane.Box,
                     rightSkel, rightSkin]);
             };
         };
@@ -95,3 +95,8 @@ var Finalize = new elms.ActionButton("Finalize", () => Page.ShowView("Finalize")
 
 addTo(Page.Header, TitleLabel);
 addManyTo(Page.Left, [About, Start, Contact, Interest, Finalize]);
+
+var nameRow = new elms.PersonName({first: "Randy", middle: "D", last: "Buchholz"});
+var streetRow = new elms.StreetUsa({number:"512", road:"Maple"});
+var muniRow = new elms.MuniUsa({city:"Austin", county: "Travis", state: "Texas"});
+addManyTo(Page.Right, [nameRow, streetRow, muniRow]);

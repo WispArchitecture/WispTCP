@@ -1,0 +1,43 @@
+﻿var lineHeight = 20;
+
+var dataCellSkel = `position:relative;display:inline-flex;`;
+var dataCellSkin = `border:1px solid black;padding:0 0 0 8px;`;
+var dataRowSkel = `position:relative;display:inline-flex;height:${lineHeight}px;`;
+var dataRowSkin = `gap:4px;`;
+
+class StreetUsa extends HTMLElement {
+    Number;
+    Road;
+    Unit;
+    static {
+        class StreetNumber extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:2;`]);
+            };
+        };
+
+        class StreetRoad extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:5;`]);
+            };
+        };
+
+        class StreetUnit extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:2;`]);
+            };
+        };
+    };
+
+    static {
+        regElm(this, [dataRowSkel, dataRowSkin]);
+    };
+
+    constructor({ number, road, unit } = {}) {
+        super();
+        this.Number = new elms.StreetNumber(number ?? "");
+        this.Road = new elms.StreetRoad(road ?? "");
+        this.Unit = new elms.StreetUnit(unit ?? "");
+        addManyTo(this, [this.Number, this.Road, this.Unit]);
+    }
+}

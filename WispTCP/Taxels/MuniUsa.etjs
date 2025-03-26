@@ -1,0 +1,42 @@
+﻿var lineHeight = 20;
+
+var dataCellSkel = `position:relative;display:inline-flex;`;
+var dataCellSkin = `border:1px solid black;padding:0 0 0 8px;`;
+var dataRowSkel = `position:relative;display:inline-flex;height:${lineHeight}px;`;
+var dataRowSkin = `gap:4px;`;
+
+class MuniUsa extends HTMLElement {
+    City;
+    County;
+    State;
+    static {
+        class MuniCity extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:5;`]);
+            };
+        };
+
+        class MuniCounty extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:4;`]);
+            };
+        };
+
+        class MuniState extends elms.TextInput {
+            static {
+                regElm(this, [dataCellSkel, dataCellSkin, `flex:2;`]);
+            };
+        };
+    };
+    static {
+        regElm(this, [dataRowSkel, dataRowSkin]);
+    };
+
+    constructor({ city, county, state } = {}) {
+        super();
+        this.City = new elms.MuniCity(city ?? "");
+        this.County = new elms.MuniCounty(county ?? "");
+        this.State = new elms.MuniState(state ?? "");
+        addManyTo(this, [this.City, this.County, this.State]);
+    };
+};

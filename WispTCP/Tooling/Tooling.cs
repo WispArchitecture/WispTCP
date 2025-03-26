@@ -9,13 +9,13 @@ using static System.Text.Encoding;
 // Interface Over 
 interface Scripting {
     // Config
-    static String rootPath = Assets.FullName;
+    //static String rootPath = Assets.FullName;
 
     // User Port
 
     /* **********   Work   ********** */
     interface Tooling {
-        static String MergeFiles(String[] files) {
+        internal static String MergeFiles(String[] files, String rootPath) {
             String[] buf = new String[files.Length];
             for (Int32 i = 0; i < files.Length; i++) {
                 String path = files[i];
